@@ -1,2 +1,3 @@
 # Capstocks_source_files
-Capstocks package scripts
+
+This repository contains scripts within capstocks packages
