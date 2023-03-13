@@ -9,15 +9,17 @@ Description: This package contains functionalities that don't fit within other p
 License: file LICENCE
 LazyData: TRUE
 Imports:
-  bench,
-  data.table,
-  doSNOW,
-  dplyr,
-  foreach,
-  forcats,
-  parallel,
-  purrr,
-  tidyr
+    bench,
+    data.table,
+    doSNOW,
+    dplyr,
+    foreach,
+    forcats,
+    futile.logger,
+    parallel,
+    purrr,
+    tidyr,
+    magrittr
 Suggests: testthat
 RoxygenNote: 6.1.1
 Encoding: UTF-8
