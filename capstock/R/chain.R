@@ -72,12 +72,19 @@ chain <- function(series, lastCompleteYear = 2016, cypColumn = "CYP", pypColumn 
   #a <- read_rds("D:/CVMOutput/quarterlyCVM.Rds")
   #.data[, "CVM"] <- read_rds("D:/CVMOutput/benchMarkData.Rds")
   #View(.data)
-  
+
   #quarterly CVM constrained to annual CVM
-  cvm.a <- ts(annualCVM$AnnualCVM, start = 1995, end = lastCompleteYear)
-  cvm.q <- ts(quarterlyCVM$UnconstrainedCVM, frequency = 4, start = c(1995,1),end = c(lastCompleteYear,4))
-  series[, "CVM"] <- predict(td(cvm.a ~ 0 + cvm.q, method = "denton-cholette", to = "quarterly", conversion = benchType))
-  
+  cvm.a <- ts(annualCVM$AnnualCVM, start = annualCVM$Year[1], end = lastCompleteYear)
+  cvm.q <- ts(quarterlyCVM$UnconstrainedCVM, frequency = 4, start = c(quarterlyCVM$Year[1],1),end = c(lastCompleteYear,4))
+
+  #No need to benchmark for stocks as Q4 CVM = annual CVM
+  if (chainType == "Flow"){
+    series[, "CVM"] <- predict(td(cvm.a ~ 0 + cvm.q, method = "denton-cholette", to = "quarterly", conversion = benchType,))
+  }
+  if (chainType =="Stock"){
+    series[, "CVM"] <- cvm.q
+  }
+
   return(series)
 
   ########detach("package:capstock", unload=TRUE)
@@ -99,7 +106,7 @@ calcScalingFactor <- function(series, lastCompleteYear, cypColumn = "CYP",
   # series <- withQuarter
   # lag the CYP and PYP data as we need next quarter's data
   result <- series %>% mutate(CYPlead = dplyr::lead(!!sym(cypColumn)),
-                             PYPlead = dplyr::lead(!!sym(pypColumn))) %>%
+                              PYPlead = dplyr::lead(!!sym(pypColumn))) %>%
     # select only the quarter 3 data and all data before the last complete year
     dplyr::filter(Quarter==3, Year < lastCompleteYear) %>%
     dplyr::arrange(dplyr::desc(Year))
@@ -127,7 +134,7 @@ calcScalingFactor <- function(series, lastCompleteYear, cypColumn = "CYP",
   # additional fix, any values after and including the last complete year
   # get a ScalingFactor of 1
   result[result$Year >= lastCompleteYear, "ScalingFactor"] <- 1
-   # this also applies to the 4th quarter directly preceding the last complete year
+  # this also applies to the 4th quarter directly preceding the last complete year
   result[result$Year >= (lastCompleteYear-1) & result$Quarter==4,"ScalingFactor"] <- 1
 
   return(result[, c("Year", "Quarter", cypColumn, pypColumn, "ScalingFactor")])
@@ -231,10 +238,10 @@ calcAnnualCVMStock <- function(series, lastCompleteYear, cypColumn = "CYP", pypC
   # .data <- withQuarter
 
   result <- series %>% dplyr::filter(Year <= lastCompleteYear,
-    Quarter == 4) %>% dplyr::mutate(AnnualCYP = !!sym(cypColumn),
-    AnnualPYP = !!sym(pypColumn)) %>% dplyr::mutate(AnnualScalingFactor = as.numeric(lead(AnnualCYP)/lead(AnnualPYP))) %>%
+                                     Quarter == 4) %>% dplyr::mutate(AnnualCYP = !!sym(cypColumn),
+                                                                     AnnualPYP = !!sym(pypColumn)) %>% dplyr::mutate(AnnualScalingFactor = as.numeric(lead(AnnualCYP)/lead(AnnualPYP))) %>%
     dplyr::mutate(AnnualScalingFactor = dplyr::if_else(is.na(AnnualScalingFactor),
-    1, AnnualScalingFactor)) %>% dplyr::arrange(desc(Year))
+                                                       1, AnnualScalingFactor)) %>% dplyr::arrange(desc(Year))
 
   # the scaling factor depends on next year's value
   # the last complete year receives a scaling factor of 1

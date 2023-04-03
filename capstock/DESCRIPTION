@@ -1,7 +1,7 @@
 Package: capstock
 Type: Package
 Title: A collection of utility scripts
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: person("Adnan", "Fiaz", email = "adnan.fiaz@ons.gov.uk",
   role = c("aut", "cre"))
 Description: This package contains functionalities that don't fit within other packages and are therefore collected in a package of their own.
